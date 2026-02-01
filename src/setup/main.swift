@@ -14,23 +14,49 @@ struct Setup {
         ╚══════════════════════════════════════════════════════╝
         """)
         
-        // Get current username
-        guard let username = ProcessInfo.processInfo.environment["USER"] else {
-            print("Error: Could not determine username")
+        // Security check: Require sudo for setup to prevent privilege escalation
+        guard getuid() == 0 else {
+            print("""
+            
+            ❌ Error: This setup utility must be run with sudo privileges
+            
+            Reason: To prevent security vulnerabilities where an attacker could
+            reset TOTP authentication and gain unauthorized sudo access.
+            
+            Usage: sudo pam_totp-setup [username]
+            
+            """)
             exit(1)
         }
         
-        print("\nConfiguring TOTP for user: \(username)")
+        // Get target username from command line argument or current user
+        let targetUsername: String
+        if CommandLine.argc > 1 {
+            targetUsername = CommandLine.arguments[1]
+        } else {
+            guard let sudoUser = ProcessInfo.processInfo.environment["SUDO_USER"] else {
+                print("Error: Could not determine target username. Please specify: sudo pam_totp-setup <username>")
+                exit(1)
+            }
+            targetUsername = sudoUser
+        }
         
-        // Check if already configured
-        if Keychain.hasSecret(for: username) {
-            print("\n⚠️  TOTP is already configured for this user.")
-            print("Do you want to reconfigure? (y/N): ", terminator: "")
+        print("\nConfiguring TOTP for user: \(targetUsername)")
+        
+        // Security: Additional confirmation for existing users
+        if Keychain.hasSecret(for: targetUsername) {
+            print("\n⚠️  TOTP is already configured for user '\(targetUsername)'.")
+            print("⚠️  Reconfiguring will invalidate existing TOTP tokens.")
+            print("⚠️  This action requires administrator confirmation.")
+            print("")
+            print("Are you sure you want to reconfigure TOTP for '\(targetUsername)'? (yes/N): ", terminator: "")
             
-            guard let response = readLine()?.lowercased(), response == "y" || response == "yes" else {
-                print("Cancelled.")
+            guard let response = readLine()?.lowercased(), response == "yes" else {
+                print("Cancelled for security.")
                 exit(0)
             }
+            
+            print("Administrator confirmed reconfiguration.")
         }
         
         // Generate new secret
@@ -39,7 +65,7 @@ struct Setup {
         
         // Create otpauth URI for QR code
         let issuer = "pam_totp"
-        let otpauthURL = "otpauth://totp/\(issuer):\(username)?secret=\(base32Secret)&issuer=\(issuer)&algorithm=SHA1&digits=6&period=30"
+        let otpauthURL = "otpauth://totp/\(issuer):\(targetUsername)?secret=\(base32Secret)&issuer=\(issuer)&algorithm=SHA1&digits=6&period=30"
         
         print("\n" + String(repeating: "─", count: 56))
         print("\n📱 Scan this QR code with your authenticator app:\n")
@@ -72,8 +98,8 @@ struct Setup {
         
         // Save secret to keychain
         do {
-            try Keychain.saveSecret(secret, for: username)
-            print("\n✅ TOTP configured successfully!")
+            try Keychain.saveSecret(secret, for: targetUsername)
+            print("\n✅ TOTP configured successfully for user '\(targetUsername)'!")
             print("\nYou can now use pam_totp for authentication.")
             print("\nTo enable, add this line to /etc/pam.d/sudo_local:")
             print("  auth sufficient /usr/local/lib/pam/libpam_totp.dylib")

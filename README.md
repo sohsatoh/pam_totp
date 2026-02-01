@@ -37,10 +37,12 @@ The following files are installed:
 ### Setup TOTP Authentication
 
 ```bash
-pam_totp-setup [username]
+sudo pam_totp-setup [username]
 ```
 
-If no username is provided, the current user will be configured. The setup utility will:
+If no username is provided, the setup utility will configure TOTP for the user who invoked sudo. The setup utility requires sudo privileges to prevent privilege escalation attacks where an attacker could reset TOTP authentication and gain unauthorized access.
+
+The setup utility will:
 
 1. Generate a secure TOTP secret
 2. Display a QR code in the terminal
