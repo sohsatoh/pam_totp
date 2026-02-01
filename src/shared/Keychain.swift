@@ -6,18 +6,55 @@ public struct Keychain {
     
     public static let service = "com.pam_totp"
     
-    /// Save TOTP secret for a user
+    /// Save TOTP secret for a user with access control
     public static func saveSecret(_ secret: Data, for username: String) throws {
+        // Try with access control first
+        var error: Unmanaged<CFError>?
+        let access = SecAccessControlCreateWithFlags(
+            kCFAllocatorDefault,
+            kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+            [], // No additional constraints
+            &error
+        )
+        
+        if let access = access {
+            // Use access control (production path)
+            let query: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecAttrAccount as String: username,
+                kSecValueData as String: secret,
+                kSecAttrAccessControl as String: access,
+                kSecAttrSynchronizable as String: false
+            ]
+            
+            SecItemDelete(query as CFDictionary)
+            
+            let status = SecItemAdd(query as CFDictionary, nil)
+            guard status == errSecSuccess else {
+                // Fallback for testing environments
+                if status == errSecMissingEntitlement {
+                    return try saveSecretWithoutAccessControl(secret, for: username)
+                }
+                throw KeychainError.saveFailed(status)
+            }
+        } else {
+            // Fallback if access control creation fails
+            return try saveSecretWithoutAccessControl(secret, for: username)
+        }
+    }
+    
+    /// Fallback method for environments without access control support
+    private static func saveSecretWithoutAccessControl(_ secret: Data, for username: String) throws {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: username,
             kSecValueData as String: secret,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly, // Improved security
-            kSecAttrSynchronizable as String: false // Prevent iCloud sync for security
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+            kSecAttrSynchronizable as String: false
         ]
         
-        // Delete existing item if present
         SecItemDelete(query as CFDictionary)
         
         let status = SecItemAdd(query as CFDictionary, nil)
@@ -75,6 +112,7 @@ public struct Keychain {
         case saveFailed(OSStatus)
         case loadFailed(OSStatus)
         case deleteFailed(OSStatus)
+        case accessControlFailed(Error)
         
         public var errorDescription: String? {
             switch self {
@@ -84,6 +122,8 @@ public struct Keychain {
                 return "Failed to load from keychain: \(status)"
             case .deleteFailed(let status):
                 return "Failed to delete from keychain: \(status)"
+            case .accessControlFailed(let error):
+                return "Failed to create access control: \(error.localizedDescription)"
             }
         }
     }

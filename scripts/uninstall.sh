@@ -32,6 +32,7 @@ fi
 echo "Removing files..."
 rm -f /usr/local/lib/pam/libpam_totp.dylib
 rm -f /usr/local/bin/pam_totp-setup
+rm -rf /var/run/pam_totp
 
 echo ""
 echo -e "${GREEN}Uninstallation complete!${NC}"

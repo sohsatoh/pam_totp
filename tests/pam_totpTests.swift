@@ -80,6 +80,14 @@ final class TOTPTests: XCTestCase {
     }
     
     func testReplayProtection() {
+        // Use temporary directory for testing
+        let testDir = NSTemporaryDirectory() + "pam_totp_test_\(UUID().uuidString)"
+        setenv("PAM_TOTP_TEST_DIR", testDir, 1)
+        defer {
+            unsetenv("PAM_TOTP_TEST_DIR")
+            try? FileManager.default.removeItem(atPath: testDir)
+        }
+        
         let secret = TOTP.generateSecret()
         let totp = TOTP(secret: secret)
         let code = totp.generate()

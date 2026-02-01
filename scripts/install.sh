@@ -35,6 +35,8 @@ fi
 echo "Creating directories..."
 mkdir -p /usr/local/lib/pam
 mkdir -p /usr/local/bin
+mkdir -p /var/run/pam_totp
+chmod 700 /var/run/pam_totp
 
 # Install PAM module
 echo "Installing PAM module..."

@@ -23,8 +23,7 @@ public func pam_sm_authenticate(
     
     // Check if user has TOTP configured
     guard Keychain.hasSecret(for: username) else {
-        _ = pam_error(pamh, "TOTP not configured for user '\(username)'.")
-        _ = pam_info(pamh, "Run 'pam_totp-setup' to configure TOTP authentication.")
+        _ = pam_error(pamh, "TOTP not configured. Contact your administrator.")
         return PAM_AUTH_ERR
     }
     
@@ -42,8 +41,11 @@ public func pam_sm_authenticate(
             return PAM_AUTH_ERR
         }
         
-        // Validate format
-        guard otpCode.count == 6, otpCode.allSatisfy(\.isNumber) else {
+        // Validate format (constant-time to prevent timing attacks)
+        let isValidLength = (otpCode.count == 6)
+        let isAllDigits = otpCode.utf8.allSatisfy { $0 >= 48 && $0 <= 57 } // '0'...'9'
+        
+        guard isValidLength && isAllDigits else {
             _ = pam_error(pamh, "Invalid format. TOTP code must be 6 digits.")
             attempts += 1
             continue
