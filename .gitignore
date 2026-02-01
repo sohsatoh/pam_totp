@@ -1,0 +1,81 @@
+# Swift Package Manager
+.build/
+Packages/
+Package.resolved
+.swiftpm/
+
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcuserstate
+*.moved-aside
+DerivedData/
+.idea/
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Build artifacts
+*.dylib
+*.so
+*.a
+*.o
+*.dSYM/
+
+# PAM module specific
+libpam_totp.dylib
+pam_totp-setup
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# IDE and editor files
+.vscode/
+*.sublime-*
+.vim/
+.netrwhist
+
+# Testing and coverage
+.coverage
+coverage/
+test-results/
+
+# Installation artifacts
+install_manifest.txt
+CMakeCache.txt
+CMakeFiles/
+
+# Security sensitive files (should never be committed)
+*.pem
+*.key
+*.p12
+*.keychain
+secrets/
+
+# Local development
+.env
+.env.local
+local.conf
+
+# Documentation build
+docs/_build/
+site/
