@@ -64,7 +64,7 @@ struct Setup {
         let base32Secret = TOTP.base32Encode(secret)
         
         // Create otpauth URI for QR code
-        let issuer = "pam_totp"
+        let issuer = PAMSharedConstants.issuer
         let otpauthURL = "otpauth://totp/\(issuer):\(targetUsername)?secret=\(base32Secret)&issuer=\(issuer)&algorithm=SHA1&digits=6&period=30"
         
         print("\n" + String(repeating: "─", count: 56))

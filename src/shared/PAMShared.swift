@@ -3,5 +3,5 @@
 
 public enum PAMSharedConstants {
     public static let version = "0.1.0"
-    public static let issuer = "pam_totp"
+    public static let issuer = "sohsatoh"
 }

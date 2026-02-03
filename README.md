@@ -133,10 +133,10 @@ To remove TOTP secrets from Keychain:
 
 ```bash
 # Remove specific user
-security delete-generic-password -a USERNAME -s com.pam_totp
+security delete-generic-password -a USERNAME -s com.sohsatoh.pam_totp
 
 # Remove all pam_totp entries
-security delete-generic-password -s com.pam_totp
+security delete-generic-password -s com.sohsatoh.pam_totp
 ```
 
 ## Development
@@ -156,7 +156,7 @@ swift build -c release
 
 ### Authentication Fails
 
-- Verify TOTP secret is properly stored: `security find-generic-password -s com.pam_totp`
+- Verify TOTP secret is properly stored: `security find-generic-password -s com.sohsatoh.pam_totp`
 - Check system time synchronization on both devices
 - Ensure TOTP app is configured correctly
 - Try generating a new TOTP secret with `pam_totp-setup`
