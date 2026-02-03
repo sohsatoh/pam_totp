@@ -4,7 +4,7 @@ import Security
 /// Keychain wrapper for secure storage of TOTP secrets
 public struct Keychain {
     
-    public static let service = "com.pam_totp"
+    public static let service = "com.sohsatoh.pam_totp"
     
     /// Save TOTP secret for a user with access control
     public static func saveSecret(_ secret: Data, for username: String) throws {
